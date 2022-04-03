@@ -2,20 +2,6 @@
 
 #define STACK_SIZE 1024
 
-typedef struct task_resource {
-	struct task_resource *link;
-	struct context *task_context;
-	uint8_t *task_stack;
-} task_resource;
-
-typedef struct task_queue {
-	uint8_t priority;
-	int counter;
-	struct task_queue *next;
-	struct task_resource *head;
-	struct task_resource *tail;
-} task_queue;
-
 task_queue task_queue_head;
 
 context ctx_os;
