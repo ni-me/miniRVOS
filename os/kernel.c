@@ -7,23 +7,26 @@
 extern void uart_init(void);
 extern void page_init(void);
 extern void page_test(void);
+extern void sched_init(void);
+extern void schedule(void);
+extern void os_main(void);
 
 const int BUFFER_LENGTH = 100;
 
 void start_kernel(void)
 {
+	char buffer[BUFFER_LENGTH];
+
 	uart_init();
 	uart_puts("Hello, RVOS!\n");
-
 	page_init();
-	page_test();
+	sched_init();
+	os_main();
 	
-	char buffer[BUFFER_LENGTH];
 	while (1) {
-		uart_gets(buffer);
-		uart_puts("\n");
-		uart_puts(buffer);
-		uart_puts("\n");
-	}; // stop here!
+		uart_puts("OS: Activate next task\n");
+		task_go();
+		uart_puts("OS: Back to OS\n\n");
+	} // stop here!
 }
 
