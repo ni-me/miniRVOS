@@ -6,7 +6,6 @@
  */
 #define UART_REG(reg) ((volatile uint8_t *)(UART0 + reg))
 
-extern const int BUFFER_LENGTH;
 
 /*
  * Reference

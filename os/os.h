@@ -8,6 +8,8 @@
 #include <stdarg.h>
 
 /* uart */
+#define BUFFER_LENGTH 100
+
 extern int uart_putc(char ch);
 extern void uart_puts(char *s);
 extern char uart_getc();

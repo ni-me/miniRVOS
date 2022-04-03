@@ -11,12 +11,10 @@ extern void sched_init(void);
 extern void schedule(void);
 extern void os_main(void);
 
-const int BUFFER_LENGTH = 100;
+static char buffer[BUFFER_LENGTH];
 
 void start_kernel(void)
 {
-	char buffer[BUFFER_LENGTH];
-
 	uart_init();
 	uart_puts("Hello, RVOS!\n");
 	page_init();
