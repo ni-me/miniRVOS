@@ -1,15 +1,11 @@
 #include "os.h"
 
 #define STACK_SIZE 1024
-#define PRIORITY_NUMS 256
-
 
 struct task_resource {
 	struct task_resource *link;
 	struct context task_context;
 	uint8_t task_stack[STACK_SIZE];
-
-	int id;
 };
 
 struct task_queue {
@@ -68,7 +64,7 @@ void sched_init()
  */
 
 struct task_resource *dequeue(struct task_queue *queue) {
-	if (queue->counter == 0) {
+	if (queue == NULL || queue->counter == 0) {
 		return NULL;
 	}
 
@@ -101,9 +97,7 @@ struct context *get_next_task()
 	struct task_queue *ptr = task_queue_head.next;
 
 	if (ptr != NULL) {
-		struct task_resource *t = dequeue(ptr);
-		enqueue(ptr, t);
-		return &t->task_context;
+		return &ptr->head->link->task_context;
 	}
 	return NULL;
 }
@@ -155,7 +149,7 @@ struct task_queue *add_task_queue(uint8_t priority) {
 	return res;
 }
 
-int task_create(void(*task)(void *), void *param, uint8_t priority, int id) {
+int task_create(void(*task)(void *), void *param, uint8_t priority) {
 	if (task == NULL) {
 		return -1;
 	}
@@ -168,7 +162,6 @@ int task_create(void(*task)(void *), void *param, uint8_t priority, int id) {
 	new_task->task_context.ra = (reg_t) task;
 	new_task->task_context.a0 = (reg_t) param;
 	new_task->task_context.sp = (reg_t) &new_task->task_stack[STACK_SIZE];
-	new_task->id = id;
 	new_task->link = NULL;
 
 	struct task_queue *task_queue_ptr = find_task_queue(priority);
@@ -204,25 +197,22 @@ int task_create(void(*task)(void *), void *param, uint8_t priority, int id) {
 
 
 void task_exit() {
-}
-
-
-
-void display_tasks() {
 	struct task_queue *queue = task_queue_head.next;
-	struct task_resource *task;
-
-	while (queue != NULL) {
-		printf("Priority %d:\n", queue->priority);
-		task = queue->head->link;
-
-		while (task != NULL) {
-			printf("%d ", task->id);
-			task = task->link;
-		}
-		printf("\n");
-		queue = queue->next;
+	if (queue == NULL) {
+		return;
 	}
+
+	struct task_resource *task = dequeue(queue);
+
+	if (queue->counter == 0) {
+		task_queue_head.next = queue->next;
+		queue->next = NULL;
+		free(queue);
+	}
+	free(task);
+	w_mscratch(0);
+
+	task_os();
 }
 
 /*
@@ -237,6 +227,7 @@ void task_delay(volatile int count)
 void task_os() {
 	struct context *ctx = ctx_current;
 	ctx_current = &ctx_os;
+
 	/* switch to os */
 	sys_switch(ctx, &ctx_os);
 }
@@ -244,10 +235,16 @@ void task_os() {
 
 void task_go() {
 	ctx_current = get_next_task();
+	if (ctx_current == NULL) {
+		panic("OPPS!There is no user task running on OS now");
+	}
 	/* switch to user task */
 	sys_switch(&ctx_os, ctx_current);
 }
 
 void os_kernel() {
+	struct task_resource *old_task = dequeue(task_queue_head.next);
+	enqueue(task_queue_head.next, old_task);
+
 	task_os();
 }

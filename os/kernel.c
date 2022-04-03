@@ -11,7 +11,6 @@ extern void sched_init(void);
 extern void schedule(void);
 extern void os_main(void);
 
-extern void display_tasks(void);
 
 static char buffer[BUFFER_LENGTH];
 
@@ -22,7 +21,6 @@ void start_kernel(void)
 	page_init();
 	sched_init();
 	os_main();
-//	display_tasks();
 	
 	while (1) {
 		 uart_puts("OS: Activate next task\n");
