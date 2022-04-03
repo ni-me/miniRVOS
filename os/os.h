@@ -28,7 +28,7 @@ extern void free(void *ptr);
 
 
 /* task management */
-struct context {
+typedef struct context {
 	/* ignore x0 */
 	reg_t ra;
 	reg_t sp;
@@ -61,14 +61,14 @@ struct context {
 	reg_t t4;
 	reg_t t5;
 	reg_t t6;
-};
+} context;
 
 extern void sys_switch(struct context *ctx_old, struct context *ctx_new);
 
-extern int  task_create(void (*task)(void *param), void *param, uint8_t priority, int id);
+extern int  task_create(void (*task)(void *param), void *param, uint8_t priority);
 extern void task_delay(volatile int count);
 extern void task_exit();
-extern void os_kernel();
+extern void task_yeild();
 extern void task_go();
 
 #endif /* __OS_H__ */
