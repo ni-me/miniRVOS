@@ -52,5 +52,5 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
-# Vistual Studio Code configration
+# Vistual Studio Code configuration
 .vscode/
