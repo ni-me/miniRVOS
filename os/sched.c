@@ -2,27 +2,24 @@
 
 #define STACK_SIZE 1024
 
-struct task_resource {
+typedef struct task_resource {
 	struct task_resource *link;
-	struct context task_context;
-	uint8_t task_stack[STACK_SIZE];
-};
+	struct context *task_context;
+	uint8_t *task_stack;
+} task_resource;
 
-struct task_queue {
+typedef struct task_queue {
 	uint8_t priority;
 	int counter;
 	struct task_queue *next;
 	struct task_resource *head;
 	struct task_resource *tail;
-};
+} task_queue;
 
-struct task_queue task_queue_head;
+task_queue task_queue_head;
 
-
-struct context ctx_os;
-struct context *ctx_current;
-
-
+context ctx_os;
+context *ctx_current;
 
 static void tasks_init() {
 	task_queue_head.counter = 0;
@@ -32,13 +29,10 @@ static void tasks_init() {
 	task_queue_head.tail = NULL;
 }
 
-
-
 static void w_mscratch(reg_t x)
 {
 	asm volatile("csrw mscratch, %0" : : "r" (x));
 }
-
 
 static reg_t r_mscratch() {
 	reg_t val = 0;
@@ -58,17 +52,16 @@ void sched_init()
 	tasks_init();
 }
 
-
 /*
  * implment a simple cycle FIFO schedular based on priority
  */
 
-struct task_resource *dequeue(struct task_queue *queue) {
+task_resource *dequeue(task_queue *queue) {
 	if (queue == NULL || queue->counter == 0) {
 		return NULL;
 	}
 
-	struct task_resource *res = queue->head->link;
+	task_resource *res = queue->head->link;
 	queue->head->link = res->link;
 
 	if (queue->head->link == NULL) {
@@ -82,7 +75,7 @@ struct task_resource *dequeue(struct task_queue *queue) {
 }
 
 
-void enqueue(struct task_queue *queue, struct task_resource *task) {
+void enqueue(task_queue *queue, task_resource *task) {
 	queue->tail->link = task;
 	queue->tail = task;
 	queue->tail->link = NULL;
@@ -92,20 +85,20 @@ void enqueue(struct task_queue *queue, struct task_resource *task) {
 
 
 
-struct context *get_next_task()
+context *get_next_task()
 {
-	struct task_queue *ptr = task_queue_head.next;
+	task_queue *ptr = task_queue_head.next;
 
 	if (ptr != NULL) {
-		return &ptr->head->link->task_context;
+		return ptr->head->link->task_context;
 	}
 	return NULL;
 }
 
 
-struct task_queue *find_task_queue(uint8_t priority) {
-	struct task_queue *t = task_queue_head.next;
-	struct task_queue *res = NULL;
+task_queue *find_task_queue(uint8_t priority) {
+	task_queue *t = task_queue_head.next;
+	task_queue *res = NULL;
 
 	while (t != NULL && t->priority <= priority) {
 		if (t->priority == priority) {
@@ -118,19 +111,19 @@ struct task_queue *find_task_queue(uint8_t priority) {
 	return res;
 }
 
-struct task_queue *add_task_queue(uint8_t priority) {
-	struct task_queue *res = find_task_queue(priority);
+task_queue *add_task_queue(uint8_t priority) {
+	task_queue *res = find_task_queue(priority);
 
 	if (res == NULL) {
-		struct task_queue *curr = task_queue_head.next;
-		struct task_queue *pre = &task_queue_head;
+		task_queue *curr = task_queue_head.next;
+		task_queue *pre = &task_queue_head;
 
 		while (curr != NULL && curr->priority < priority) {
 			curr = curr->next;
 			pre = pre->next;
 		}
 
-		res = (struct task_queue *) malloc(sizeof(struct task_queue));
+		res = (task_queue *) malloc(sizeof(task_queue));
 		if (res == NULL) {
 			return NULL;
 		}
@@ -154,18 +147,21 @@ int task_create(void(*task)(void *), void *param, uint8_t priority) {
 		return -1;
 	}
 
-	struct task_resource *new_task = (struct task_resource *) malloc(sizeof(struct task_resource));
-	if (new_task == NULL) {
+	task_resource *new_task = (task_resource *) malloc(sizeof(task_resource));
+	new_task->task_context = (context *) malloc(sizeof(context));
+	new_task->task_stack = (uint8_t *) malloc(sizeof(uint8_t) * STACK_SIZE);
+
+	if (!new_task || !new_task->task_context || !new_task->task_stack) {
 		return -1;
 	}
 
-	new_task->task_context.ra = (reg_t) task;
-	new_task->task_context.a0 = (reg_t) param;
-	new_task->task_context.sp = (reg_t) &new_task->task_stack[STACK_SIZE];
+	new_task->task_context->ra = (reg_t) task;
+	new_task->task_context->a0 = (reg_t) param;
+	new_task->task_context->sp = (reg_t) (new_task->task_stack + STACK_SIZE);
 	new_task->link = NULL;
 
-	struct task_queue *task_queue_ptr = find_task_queue(priority);
-	struct task_resource *task_resource_ptr = NULL;
+	task_queue *task_queue_ptr = find_task_queue(priority);
+	task_resource *task_resource_ptr = NULL;
 
 	/*
 	 * task queue has not existed
@@ -177,10 +173,12 @@ int task_create(void(*task)(void *), void *param, uint8_t priority) {
 		}
 
 		/* add task list head */
-		task_resource_ptr = (struct task_resource *) malloc(sizeof(struct task_resource));
+		task_resource_ptr = (task_resource *) malloc(sizeof(task_resource));
 		if (task_resource_ptr == NULL) {
 			return -1;
 		}
+		task_resource_ptr->task_context = NULL;
+		task_resource_ptr->task_stack = NULL;
 		task_resource_ptr->link = NULL;
 
 		task_queue_ptr->head = task_resource_ptr;
@@ -197,19 +195,22 @@ int task_create(void(*task)(void *), void *param, uint8_t priority) {
 
 
 void task_exit() {
-	struct task_queue *queue = task_queue_head.next;
+	task_queue *queue = task_queue_head.next;
 	if (queue == NULL) {
 		return;
 	}
 
-	struct task_resource *task = dequeue(queue);
+	task_resource *task = dequeue(queue);
+	free(task->task_context);
+	free(task->task_stack);
+	free(task);
 
 	if (queue->counter == 0) {
 		task_queue_head.next = queue->next;
 		queue->next = NULL;
 		free(queue);
 	}
-	free(task);
+
 	w_mscratch(0);
 
 	task_os();
@@ -225,7 +226,7 @@ void task_delay(volatile int count)
 }
 
 void task_os() {
-	struct context *ctx = ctx_current;
+	context *ctx = ctx_current;
 	ctx_current = &ctx_os;
 
 	/* switch to os */
@@ -236,14 +237,14 @@ void task_os() {
 void task_go() {
 	ctx_current = get_next_task();
 	if (ctx_current == NULL) {
-		panic("OPPS!There is no user task running on OS now");
+		panic("OPPS! There is no user task running on OS now");
 	}
 	/* switch to user task */
 	sys_switch(&ctx_os, ctx_current);
 }
 
-void os_kernel() {
-	struct task_resource *old_task = dequeue(task_queue_head.next);
+void task_yeild() {
+	task_resource *old_task = dequeue(task_queue_head.next);
 	enqueue(task_queue_head.next, old_task);
 
 	task_os();
