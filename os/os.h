@@ -65,7 +65,7 @@ struct context {
 
 extern void sys_switch(struct context *ctx_old, struct context *ctx_new);
 
-extern int  task_create(void (*task)(void *param), void *param, uint8_t priority);
+extern int  task_create(void (*task)(void *param), void *param, uint8_t priority, int id);
 extern void task_delay(volatile int count);
 extern void task_exit();
 extern void os_kernel();
