@@ -13,12 +13,15 @@ SRCS_ASM = \
 	start.S \
 	mem.S \
 	memset.S \
+	entry.S \
 
 SRCS_C = \
 	kernel.c \
 	uart.c \
 	printf.c \
 	page.c \
+	sched.c \
+	user.c \
 
 OBJS = $(SRCS_ASM:.S=.o)
 OBJS += $(SRCS_C:.c=.o)

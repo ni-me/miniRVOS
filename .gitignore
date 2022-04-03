@@ -53,4 +53,5 @@ Mkfile.old
 dkms.conf
 
 # Vistual Studio Code configuration
-.vscode
+.vscode/
+
