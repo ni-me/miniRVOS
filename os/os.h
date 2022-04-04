@@ -63,6 +63,25 @@ typedef struct context {
 	reg_t t6;
 } context;
 
+
+typedef struct task_resource {
+	struct task_resource *link;
+	struct context *task_context;
+	uint8_t *task_stack;
+} task_resource;
+
+
+typedef struct task_queue {
+	uint8_t priority;
+	int counter;
+	struct task_queue *next;
+	struct task_resource *head;
+	struct task_resource *tail;
+} task_queue;
+
+
+
+
 extern void sys_switch(struct context *ctx_old, struct context *ctx_new);
 
 extern int  task_create(void (*task)(void *param), void *param, uint8_t priority);
