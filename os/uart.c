@@ -118,12 +118,14 @@ void uart_puts(char *s)
 	}
 }
 
-char uart_getc() {
+char uart_getc()
+{
 	while ((uart_read_reg(LSR) & LSR_RX_READY) == 0);
 	return (char)uart_read_reg(RHR);
 }
 
-int uart_gets(char *s) {
+int uart_gets(char *s)
+{
 	char *p = s;
 	int len = 0;
 	while (++len < BUFFER_LENGTH) {

@@ -35,7 +35,8 @@ void user_task1(int cnt)
 }
 
 
-void user_task2() {
+void user_task2()
+{
 	int cnt = 2;
 	uart_puts("Task 2: Created!\n");
 	uart_puts("Task 2: Back to OS\n");
@@ -49,7 +50,8 @@ void user_task2() {
 	 task_exit();
 }
 
-void user_task3() {
+void user_task3()
+{
 	int n = 15;
 	uart_puts("Task 3: Created!\n");
 	uart_puts("Task 3: Back to OS\n");

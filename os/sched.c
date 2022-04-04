@@ -8,7 +8,8 @@ context ctx_os;
 context *ctx_current;
 
 
-static void tasks_init() {
+static void tasks_init()
+{
 	task_queue_head.next = NULL;
 }
 
@@ -17,17 +18,12 @@ static void w_mscratch(reg_t x)
 	asm volatile("csrw mscratch, %0" : : "r" (x));
 }
 
-void sched_init()
-{
-	w_mscratch(-1);
-	tasks_init();
-}
-
 /*
  * implment a simple cycle FIFO schedular based on priority
  */
 
-static task_resource *dequeue(task_queue *queue) {
+static task_resource *dequeue(task_queue *queue)
+{
 	if (queue == NULL) {
 		return NULL;
 	}
@@ -46,7 +42,8 @@ static task_resource *dequeue(task_queue *queue) {
 }
 
 
-static void enqueue(task_queue *queue, task_resource *task) {
+static void enqueue(task_queue *queue, task_resource *task)
+{
 	queue->tail->link = task;
 	queue->tail = task;
 	queue->tail->link = NULL;
@@ -66,7 +63,8 @@ static context *get_next_task()
 }
 
 
-static task_queue *find_task_queue(uint8_t priority) {
+static task_queue *find_task_queue(uint8_t priority)
+{
 	task_queue *t = task_queue_head.next;
 
 	while (t != NULL && t->priority <= priority) {
@@ -79,7 +77,8 @@ static task_queue *find_task_queue(uint8_t priority) {
 	return NULL;
 }
 
-static task_queue *new_task_queue(uint8_t priority) {
+static task_queue *new_task_queue(uint8_t priority)
+{
 	task_queue *node = (task_queue *) malloc(sizeof(task_queue));
 
 	if (node == NULL) {
@@ -96,7 +95,8 @@ static task_queue *new_task_queue(uint8_t priority) {
 }
 
 
-static task_resource *new_task_resource() {
+static task_resource *new_task_resource()
+{
 	task_resource *ptr = (task_resource *) malloc(sizeof(task_resource));
 	if (ptr == NULL) {
 		return NULL;
@@ -109,7 +109,8 @@ static task_resource *new_task_resource() {
 }
 
 
-task_queue *add_task_queue(uint8_t priority) {
+static task_queue *add_task_queue(uint8_t priority)
+{
 	task_queue *res = find_task_queue(priority);
 
 	if (res == NULL) {
@@ -131,7 +132,15 @@ task_queue *add_task_queue(uint8_t priority) {
 	return res;
 }
 
-int task_create(void(*task)(void *), void *param, uint8_t priority) {
+void sched_init()
+{
+	w_mscratch(-1);
+	tasks_init();
+}
+
+
+int task_create(void(*task)(void *), void *param, uint8_t priority)
+{
 	if (task == NULL) {
 		return -1;
 	}
@@ -176,7 +185,8 @@ int task_create(void(*task)(void *), void *param, uint8_t priority) {
 }
 
 
-void task_exit() {
+void task_exit()
+{
 	task_queue *queue = task_queue_head.next;
 	if (queue == NULL) {
 		return;
@@ -210,7 +220,8 @@ void task_delay(volatile int count)
 	while (count--);
 }
 
-void task_os() {
+void task_os()
+{
 	context *ctx = ctx_current;
 	ctx_current = &ctx_os;
 
@@ -219,7 +230,8 @@ void task_os() {
 }
 
 
-void task_go() {
+void task_go()
+{
 	ctx_current = get_next_task();
 	if (ctx_current == NULL) {
 		panic("OPPS! There is no user task running on OS now");
@@ -228,7 +240,8 @@ void task_go() {
 	sys_switch(&ctx_os, ctx_current);
 }
 
-void task_yeild() {
+void task_yeild()
+{
 	task_resource *old_task = dequeue(task_queue_head.next);
 	enqueue(task_queue_head.next, old_task);
 

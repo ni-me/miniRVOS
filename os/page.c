@@ -98,7 +98,8 @@ static inline int is_page_free(struct Chunk *chunk)
 }
 
 
-static void *mp_alloc(int total, int nums, int SIZE, int STEPS, int(*func)(struct Chunk *)) {
+static void *mp_alloc(int total, int nums, int SIZE, int STEPS, int(*func)(struct Chunk *))
+{
 	if (nums <= 0) {
 		return NULL;
 	}
@@ -138,7 +139,8 @@ static void *mp_alloc(int total, int nums, int SIZE, int STEPS, int(*func)(struc
 
 }
 
-static void mp_free(void *p, int SIZE, int STEPS) {
+static void mp_free(void *p, int SIZE, int STEPS)
+{
 	if (!p || (uint32_t)p >= _alloc_end) {
 		return;
 	}
