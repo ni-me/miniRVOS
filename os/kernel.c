@@ -13,7 +13,7 @@ extern void trap_init(void);
 extern void plic_init(void);
 
 
-static char buffer[BUFFER_LENGTH];
+char buffer[BUFFER_LENGTH];
 
 void start_kernel(void)
 {
