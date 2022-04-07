@@ -2,6 +2,7 @@
 #define __OS_H__
 
 #include "types.h"
+#include "riscv.h"
 #include "platform.h"
 
 #include <stddef.h>
@@ -87,5 +88,9 @@ extern void task_delay(volatile int count);
 extern void task_exit();
 extern void task_yeild();
 extern void task_go();
+
+/* plic */
+extern int plic_claim(void);
+extern void plic_complete(int irq);
 
 #endif /* __OS_H__ */

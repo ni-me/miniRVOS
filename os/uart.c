@@ -138,3 +138,16 @@ int uart_gets(char *s)
 
 	return p - s;
 }
+
+
+/*
+ * handle a uart interrupt, raised because input has arrived, called from trap.c.
+ */
+
+void uart_isr(void) {
+	char buffer[100];
+	uart_gets(buffer);
+	uart_putc('\n');
+	uart_puts(buffer);
+	uart_putc('\n');
+}

@@ -25,7 +25,7 @@ void user_task1(int cnt)
 	uart_puts("Task 1: Back to OS\n");
 	task_yeild();
 
-	while (cnt--) {
+	while (1) {
 		printf("Task 1: Running...( %d )\n", cnt);
 		task_delay(DELAY);
 		task_yeild();
@@ -41,7 +41,7 @@ void user_task2()
 	uart_puts("Task 2: Created!\n");
 	uart_puts("Task 2: Back to OS\n");
 	task_yeild();
-	while (cnt--) {
+	while (1) {
 		printf("Task 2: Running...( %d )\n", cnt);
 		task_delay(DELAY);
 		task_yeild();
@@ -77,9 +77,9 @@ void os_main(void)
 	// task_create(user_task3, NULL, 255, 6);
 	
 	task_create(user_task1, cnt, 0);
-	task_create(user_task0, id0, 3);
+	//task_create(user_task0, id0, 3);
 	task_create(user_task2, NULL, 0);
-	task_create(user_task3, NULL, 20);
+	//task_create(user_task3, NULL, 20);
 }
 
  

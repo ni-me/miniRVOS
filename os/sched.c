@@ -13,10 +13,6 @@ static void tasks_init()
 	task_queue_head.next = NULL;
 }
 
-static void w_mscratch(reg_t x)
-{
-	asm volatile("csrw mscratch, %0" : : "r" (x));
-}
 
 /*
  * implment a simple cycle FIFO schedular based on priority
@@ -139,6 +135,45 @@ void sched_init()
 }
 
 
+
+
+/*
+ * a very rough implementaion, just to consume the cpu
+ */
+void task_delay(volatile int count)
+{
+	count *= 50000;
+	while (count--);
+}
+
+void task_os()
+{
+	context *ctx = ctx_current;
+	ctx_current = &ctx_os;
+
+	/* switch to os */
+	sys_switch(ctx, &ctx_os);
+}
+
+
+void task_go()
+{
+	ctx_current = get_next_task();
+	if (ctx_current == NULL) {
+		panic("OPPS! There is no user task running on OS now");
+	}
+	/* switch to user task */
+	sys_switch(&ctx_os, ctx_current);
+}
+
+void task_yeild()
+{
+	task_resource *old_task = dequeue(task_queue_head.next);
+	enqueue(task_queue_head.next, old_task);
+
+	task_os();
+}
+
 int task_create(void(*task)(void *), void *param, uint8_t priority)
 {
 	if (task == NULL) {
@@ -185,6 +220,7 @@ int task_create(void(*task)(void *), void *param, uint8_t priority)
 }
 
 
+
 void task_exit()
 {
 	task_queue *queue = task_queue_head.next;
@@ -207,43 +243,6 @@ void task_exit()
 	}
 
 	w_mscratch(0);
-
-	task_os();
-}
-
-/*
- * a very rough implementaion, just to consume the cpu
- */
-void task_delay(volatile int count)
-{
-	count *= 50000;
-	while (count--);
-}
-
-void task_os()
-{
-	context *ctx = ctx_current;
-	ctx_current = &ctx_os;
-
-	/* switch to os */
-	sys_switch(ctx, &ctx_os);
-}
-
-
-void task_go()
-{
-	ctx_current = get_next_task();
-	if (ctx_current == NULL) {
-		panic("OPPS! There is no user task running on OS now");
-	}
-	/* switch to user task */
-	sys_switch(&ctx_os, ctx_current);
-}
-
-void task_yeild()
-{
-	task_resource *old_task = dequeue(task_queue_head.next);
-	enqueue(task_queue_head.next, old_task);
 
 	task_os();
 }
