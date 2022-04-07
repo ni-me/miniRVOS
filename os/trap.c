@@ -15,16 +15,22 @@ void external_interrupt_handler()
 {
 	int irq = plic_claim();
 
-	if (irq == UART0_IRQ){
-      		uart_isr();
-	} else if (irq) {
-		printf("unexpected interrupt irq = %d\n", irq);
+	switch (irq) {
+		case 0:
+			break;
+		case UART0_IRQ:
+			uart_isr();
+			break;
+		default:
+			printf("unexpected interrupt irq = %d\n", irq);
+			break;
 	}
-	
+
 	if (irq) {
 		plic_complete(irq);
 	}
 }
+
 
 reg_t trap_handler(reg_t epc, reg_t cause)
 {
