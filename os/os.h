@@ -29,6 +29,10 @@ extern void free(void *ptr);
 
 
 /* task management */
+
+#define TASK_YEILD_CODE 0
+#define TASK_EXIT_CODE 1
+
 typedef struct context {
 	/* ignore x0 */
 	reg_t ra;

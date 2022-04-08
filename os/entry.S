@@ -100,15 +100,16 @@ trap_vector:
 	sw	t6, 120(t5)	# save t6 with t5 as base
 
 	# save mepc to context of current task
-	csrr	a0, mepc
-	sw	a0, 124(t5)
+	csrr	t6, mepc
+	sw	t6, 124(t5)
 
 	# Restore the context pointer into mscratch
 	csrw	mscratch, t5
 
 	# call the C trap handler in trap.c
-	csrr	a0, mepc
-	csrr	a1, mcause
+	csrr	a1, mepc
+	csrr	a2, mcause
+	
 	call	trap_handler
 
 	# trap_handler will return the return address via a0.
@@ -127,14 +128,8 @@ trap_vector:
 .globl sys_switch
 .align 4
 sys_switch:
-	csrrw t6, mscratch, t6
-	beqz t6, 1f
-
 	reg_save a0
-	csrr t6, mscratch
-	sw t6, 120(a0)
 
-1:
 	csrw mscratch, a1
 	lw t6, 124(a1)
 	csrw mepc, t6

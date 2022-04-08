@@ -3,6 +3,8 @@
 extern void trap_vector(void);
 extern void uart_isr(void);
 extern void timer_handler(void);
+extern void destory(void);
+extern void switch_to_os(void);
 
 void trap_init()
 {
@@ -11,6 +13,15 @@ void trap_init()
 	 */
 	w_mtvec((reg_t)trap_vector);
 }
+
+void software_trigger(reg_t code)
+{
+	/* When jump into trap_vector(), $a0 is equal to code */
+
+	int id = r_mhartid();
+	*(uint32_t*)CLINT_MSIP(id) = 1;
+}
+
 
 void external_interrupt_handler()
 {
@@ -33,7 +44,28 @@ void external_interrupt_handler()
 }
 
 
-reg_t trap_handler(reg_t epc, reg_t cause)
+void software_interrupt_handler(reg_t code) {
+	/*
+	 * acknowledge the software interrupt by clearing
+     * the MSIP bit in mip.
+	 */
+	int id = r_mhartid();
+	*(uint32_t*)CLINT_MSIP(id) = 0;
+
+	switch(code) {
+		case TASK_YEILD_CODE:
+			task_os();
+			break;
+		case TASK_EXIT_CODE:
+			destory();
+			switch_to_os();
+			break;
+		default:
+			break;
+	}
+}
+
+reg_t trap_handler(reg_t code, reg_t epc, reg_t cause)
 {
 	reg_t return_pc = epc;
 	reg_t cause_code = cause & 0xfff;
@@ -43,13 +75,7 @@ reg_t trap_handler(reg_t epc, reg_t cause)
 		switch (cause_code) {
 		case 3:
 			uart_puts("software interruption!\n");
-			/*
-			 * acknowledge the software interrupt by clearing
-    			 * the MSIP bit in mip.
-			 */
-			int id = r_mhartid();
-    		*(uint32_t*)CLINT_MSIP(id) = 0;
-			task_os();
+			software_interrupt_handler(code);
 			break;
 		case 7:
 			uart_puts("timer interruption!\n");

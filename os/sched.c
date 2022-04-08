@@ -7,6 +7,7 @@ task_queue task_queue_head;
 context ctx_os;
 context *ctx_current;
 
+extern void software_trigger(reg_t code);
 
 static void tasks_init()
 {
@@ -130,7 +131,7 @@ static task_queue *add_task_queue(uint8_t priority)
 
 void sched_init()
 {
-	w_mscratch(-1);
+	w_mscratch(0);
 	tasks_init();
 	/* enable machine-mode software interrupts. */
 	w_mie(r_mie() | MIE_MSIE);
@@ -148,19 +149,18 @@ void task_delay(volatile int count)
 	while (count--);
 }
 
+void switch_to_os() {
+	ctx_current = &ctx_os;
+	switch_to(&ctx_os);
+}
+
 void task_os()
 {
 	task_resource *old_task = dequeue(task_queue_head.next);
 	enqueue(task_queue_head.next, old_task);
 
-	//context *ctx = ctx_current;
-	ctx_current = &ctx_os;
-
-	/* switch to os */
-	// sys_switch(ctx, &ctx_os);
-	switch_to(&ctx_os);
+	switch_to_os();
 }
-
 
 void task_go()
 {
@@ -172,11 +172,11 @@ void task_go()
 	sys_switch(&ctx_os, ctx_current);
 }
 
+
 void task_yeild()
 {
 	/* trigger a machine-level software interrupt */
-	int id = r_mhartid();
-	*(uint32_t*)CLINT_MSIP(id) = 1;
+	software_trigger(TASK_YEILD_CODE);
 }
 
 
@@ -225,9 +225,13 @@ int task_create(void(*task)(void *), void *param, uint8_t priority)
 	return 0;
 }
 
-
-
 void task_exit()
+{
+	/* trigger a machine-level software interrupt */
+	software_trigger(TASK_EXIT_CODE);
+}
+
+void destory()
 {
 	task_queue *queue = task_queue_head.next;
 	if (queue == NULL) {
@@ -247,8 +251,5 @@ void task_exit()
 		free(queue->head);
 		free(queue);
 	}
-
-	w_mscratch(0);
-
-	task_os();
 }
+
