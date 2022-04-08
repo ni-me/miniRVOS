@@ -99,6 +99,10 @@ trap_vector:
 	csrr	t6, mscratch	# read t6 back from mscratch
 	sw	t6, 120(t5)	# save t6 with t5 as base
 
+	# save mepc to context of current task
+	csrr	a0, mepc
+	sw	a0, 124(t5)
+
 	# Restore the context pointer into mscratch
 	csrw	mscratch, t5
 
@@ -132,7 +136,21 @@ sys_switch:
 
 1:
 	csrw mscratch, a1
+	lw t6, 124(a1)
+	csrw mepc, t6
 	mv t6, a1
+	reg_restore t6
+
+	mret
+
+
+
+.text
+.global switch_to
+.align 4
+switch_to:
+	csrw mscratch, a0
+	mv t6, a0
 	reg_restore t6
 
 	ret

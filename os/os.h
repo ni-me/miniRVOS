@@ -62,6 +62,10 @@ typedef struct context {
 	reg_t t4;
 	reg_t t5;
 	reg_t t6;
+
+	// save the pc to run in next schedule cycle
+	reg_t pc; // offset: 31 *4 = 124
+
 } context;
 
 
@@ -82,12 +86,14 @@ typedef struct task_queue {
 
 
 extern void sys_switch(struct context *ctx_old, struct context *ctx_new);
+extern void switch_to(struct context *ctx);
 
 extern int  task_create(void (*task)(void *param), void *param, uint8_t priority);
 extern void task_delay(volatile int count);
 extern void task_exit();
 extern void task_yeild();
 extern void task_go();
+extern void task_os();
 
 /* plic */
 extern int plic_claim(void);

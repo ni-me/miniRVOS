@@ -2,3 +2,15 @@ set disassemble-next-line on
 b _start
 target remote : 1234
 c
+
+b start_kernel
+b trap_vector
+b user_task1
+b user_task2
+
+display/z $mscratch
+display/z $mepc
+display/z $sp
+display/z $a0
+display/z $a1
+display/z $a2

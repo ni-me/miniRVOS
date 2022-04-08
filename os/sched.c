@@ -132,6 +132,8 @@ void sched_init()
 {
 	w_mscratch(-1);
 	tasks_init();
+	/* enable machine-mode software interrupts. */
+	w_mie(r_mie() | MIE_MSIE);
 }
 
 
@@ -148,11 +150,15 @@ void task_delay(volatile int count)
 
 void task_os()
 {
-	context *ctx = ctx_current;
+	task_resource *old_task = dequeue(task_queue_head.next);
+	enqueue(task_queue_head.next, old_task);
+
+	//context *ctx = ctx_current;
 	ctx_current = &ctx_os;
 
 	/* switch to os */
-	sys_switch(ctx, &ctx_os);
+	// sys_switch(ctx, &ctx_os);
+	switch_to(&ctx_os);
 }
 
 
@@ -168,11 +174,11 @@ void task_go()
 
 void task_yeild()
 {
-	task_resource *old_task = dequeue(task_queue_head.next);
-	enqueue(task_queue_head.next, old_task);
-
-	task_os();
+	/* trigger a machine-level software interrupt */
+	int id = r_mhartid();
+	*(uint32_t*)CLINT_MSIP(id) = 1;
 }
+
 
 int task_create(void(*task)(void *), void *param, uint8_t priority)
 {
@@ -188,7 +194,7 @@ int task_create(void(*task)(void *), void *param, uint8_t priority)
 		return -1;
 	}
 
-	new_task->task_context->ra = (reg_t) task;
+	new_task->task_context->pc = (reg_t) task;
 	new_task->task_context->a0 = (reg_t) param;
 	new_task->task_context->sp = (reg_t) (new_task->task_stack + STACK_SIZE);
 	new_task->link = NULL;

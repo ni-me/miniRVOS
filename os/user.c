@@ -1,7 +1,6 @@
 #include "os.h"
 
 #define DELAY 1000
-#define NAME_SIZE 33
 
 void user_task0(int id)
 {
@@ -28,7 +27,7 @@ void user_task1(int cnt)
 	while (1) {
 		printf("Task 1: Running...( %d )\n", cnt);
 		task_delay(DELAY);
-		task_yeild();
+		//task_yeild();
 	}
 	uart_puts("Task 1: Exited!\n");
 	task_exit();
@@ -44,7 +43,7 @@ void user_task2()
 	while (1) {
 		printf("Task 2: Running...( %d )\n", cnt);
 		task_delay(DELAY);
-		task_yeild();
+		//task_yeild();
 	}
 	uart_puts("Task 2: Exited!\n");
 	 task_exit();
