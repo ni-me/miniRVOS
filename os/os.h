@@ -103,4 +103,14 @@ extern void task_os();
 extern int plic_claim(void);
 extern void plic_complete(int irq);
 
+/* lock */
+
+struct spinlock {
+	int locked;
+};
+
+extern void initlock(struct spinlock *);
+extern void spin_lock(struct spinlock *);
+extern void spin_unlock(struct spinlock *);
+
 #endif /* __OS_H__ */

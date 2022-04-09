@@ -9,6 +9,7 @@ context *ctx_current;
 
 extern void software_trigger(reg_t code);
 
+
 static void tasks_init()
 {
 	task_queue_head.next = NULL;
@@ -138,45 +139,9 @@ void sched_init()
 }
 
 
-
-
-/*
- * a very rough implementaion, just to consume the cpu
- */
-void task_delay(volatile int count)
-{
-	count *= 50000;
-	while (count--);
-}
-
 void switch_to_os() {
 	ctx_current = &ctx_os;
 	switch_to(&ctx_os);
-}
-
-void task_os()
-{
-	task_resource *old_task = dequeue(task_queue_head.next);
-	enqueue(task_queue_head.next, old_task);
-
-	switch_to_os();
-}
-
-void task_go()
-{
-	ctx_current = get_next_task();
-	if (ctx_current == NULL) {
-		panic("OPPS! There is no user task running on OS now");
-	}
-	/* switch to user task */
-	sys_switch(&ctx_os, ctx_current);
-}
-
-
-void task_yeild()
-{
-	/* trigger a machine-level software interrupt */
-	software_trigger(TASK_YEILD_CODE);
 }
 
 
@@ -225,11 +190,6 @@ int task_create(void(*task)(void *), void *param, uint8_t priority)
 	return 0;
 }
 
-void task_exit()
-{
-	/* trigger a machine-level software interrupt */
-	software_trigger(TASK_EXIT_CODE);
-}
 
 void destory()
 {
@@ -253,3 +213,46 @@ void destory()
 	}
 }
 
+
+void task_exit()
+{
+	/* trigger a machine-level software interrupt */
+	software_trigger(TASK_EXIT_CODE);
+}
+
+
+void task_os()
+{
+	task_resource *old_task = dequeue(task_queue_head.next);
+	enqueue(task_queue_head.next, old_task);
+
+	switch_to_os();
+}
+
+
+void task_go()
+{
+	ctx_current = get_next_task();
+	if (ctx_current == NULL) {
+		panic("OPPS! There is no user task running on OS now");
+	}
+	/* switch to user task */
+	sys_switch(&ctx_os, ctx_current);
+}
+
+
+void task_yeild()
+{
+	/* trigger a machine-level software interrupt */
+	software_trigger(TASK_YEILD_CODE);
+}
+
+
+/*
+ * a very rough implementaion, just to consume the cpu
+ */
+void task_delay(volatile int count)
+{
+	count *= 50000;
+	while (count--);
+}
