@@ -74,6 +74,8 @@ typedef struct context {
 
 
 typedef struct task_resource {
+	uint32_t tick;
+	uint32_t timeslice;
 	struct task_resource *link;
 	struct context *task_context;
 	uint8_t *task_stack;
@@ -92,7 +94,7 @@ typedef struct task_queue {
 extern void sys_switch(struct context *ctx_old, struct context *ctx_new);
 extern void switch_to(struct context *ctx);
 
-extern int  task_create(void (*task)(void *param), void *param, uint8_t priority);
+extern int  task_create(void (*task)(void *param), void *param, uint8_t priority, uint32_t timeslice);
 extern void task_delay(volatile int count);
 extern void task_exit();
 extern void task_yeild();

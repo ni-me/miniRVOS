@@ -145,7 +145,7 @@ void switch_to_os() {
 }
 
 
-int task_create(void(*task)(void *), void *param, uint8_t priority)
+int task_create(void(*task)(void *), void *param, uint8_t priority, uint32_t timeslice)
 {
 	if (task == NULL) {
 		return -1;
@@ -159,6 +159,8 @@ int task_create(void(*task)(void *), void *param, uint8_t priority)
 		return -1;
 	}
 
+	new_task->tick = 0;
+	new_task->timeslice = timeslice;
 	new_task->task_context->pc = (reg_t) task;
 	new_task->task_context->a0 = (reg_t) param;
 	new_task->task_context->sp = (reg_t) (new_task->task_stack + STACK_SIZE);

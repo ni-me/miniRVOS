@@ -1,25 +1,24 @@
 #include "os.h"
 
 #define DELAY 1000
-#define USE_LOCK
+//#define USE_LOCK
 
 struct spinlock *lock = NULL;
 
-
 void user_task0(int id)
 {
-	int n = 10;
+	int cnt = 10;
 	printf("Task %d: Created!\n", id);
 	printf("Task %d: Back to OS\n", id);
 	task_yeild();
 
-	while (n --) {
+	while (cnt --) {
 #ifdef USE_LOCK
 		task_delay(DELAY);
 		spin_lock(lock);
 #endif
 		for (int i = 0; i < 5; i ++) {
-			printf("Task %d: Running...( %d )\n", id, i);
+			printf("Task %d: Running...( %d ) ---- [ %d ]\n", id, i, cnt);
 			task_delay(DELAY);
 		}
 #ifdef USE_LOCK
@@ -44,7 +43,7 @@ void user_task1(int cnt)
 		spin_lock(lock);
 #endif
 		for (int i = 0; i < 10; i ++) {
-			printf("Task 1: Running...( %d )\n", i);
+			printf("Task 1: Running...( %d ) ---- [ %d ]\n", i, cnt);
 			task_delay(DELAY);
 		}
 
@@ -70,7 +69,7 @@ void user_task2()
 		spin_lock(lock);
 #endif
 		for (int i = 0; i < 10; i ++) {
-			printf("Task 2: Running...( %d )\n", i);
+			printf("Task 2: Running...( %d ) ---- [ %d ]\n", i, cnt);
 			task_delay(DELAY);
 		}
 
@@ -109,10 +108,10 @@ void os_main(void)
 	}
 	initlock(lock);
 #endif
-	task_create(user_task1, cnt, 0);
-	task_create(user_task0, id0, 3);
-	task_create(user_task2, NULL, 0);
-	task_create(user_task3, NULL, 20);
+	task_create(user_task1, cnt, 0, 3);
+	task_create(user_task0, id0, 3, 1);
+	task_create(user_task2, NULL, 0, 2);
+	task_create(user_task3, NULL, 20, 2);
 }
 
  
