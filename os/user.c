@@ -26,8 +26,9 @@ void timer_func(void *arg)
 
 static struct spinlock *user_lock = NULL;
 
-void user_task0(int id)
+void user_task0(void *arg)
 {
+	int id = *(int *)arg;
 	int cnt = 10;
 	printf("Task %d: Created!\n", id);
 	printf("Task %d: Back to OS\n", id);
@@ -65,12 +66,12 @@ void user_task0(int id)
 }
 
 
-void user_task1(int cnt)
+void user_task1(void *arg)
 {
 	uart_puts("Task 1: Created!\n");
 	uart_puts("Task 1: Back to OS\n");
 	task_yeild();
-
+	int cnt = *(int *)arg;
 	while (cnt --) {
 #ifdef USE_LOCK
 		task_delay(DELAY);
@@ -142,8 +143,8 @@ void os_main(void)
 	}
 	initlock(user_lock);
 #endif
-	task_create(user_task1, cnt, 0, 3);
-	task_create(user_task0, id0, 3, 1);
+	task_create(user_task1, &cnt, 0, 3);
+	task_create(user_task0, &id0, 3, 1);
 	task_create(user_task2, NULL, 0, 2);
 	task_create(user_task3, NULL, 20, 2);
 }
