@@ -20,7 +20,7 @@ static void tasks_init()
  * implment a simple cycle FIFO schedular based on priority
  */
 
-static task_resource *dequeue(task_queue *queue)
+static inline task_resource *dequeue(task_queue *queue)
 {
 	if (queue == NULL) {
 		return NULL;
@@ -40,7 +40,7 @@ static task_resource *dequeue(task_queue *queue)
 }
 
 
-static void enqueue(task_queue *queue, task_resource *task)
+static inline void enqueue(task_queue *queue, task_resource *task)
 {
 	queue->tail->link = task;
 	queue->tail = task;
@@ -50,7 +50,7 @@ static void enqueue(task_queue *queue, task_resource *task)
 }
 
 
-static context *get_next_task()
+static inline context *get_next_task()
 {
 	task_queue *ptr = task_queue_head.next;
 
@@ -61,7 +61,7 @@ static context *get_next_task()
 }
 
 
-static task_queue *find_task_queue(uint8_t priority)
+static inline task_queue *find_task_queue(uint8_t priority)
 {
 	task_queue *t = task_queue_head.next;
 
@@ -75,7 +75,7 @@ static task_queue *find_task_queue(uint8_t priority)
 	return NULL;
 }
 
-static task_queue *new_task_queue(uint8_t priority)
+static inline task_queue *new_task_queue(uint8_t priority)
 {
 	task_queue *node = (task_queue *) malloc(sizeof(task_queue));
 
@@ -93,7 +93,7 @@ static task_queue *new_task_queue(uint8_t priority)
 }
 
 
-static task_resource *new_task_resource()
+static inline task_resource *new_task_resource()
 {
 	task_resource *ptr = (task_resource *) malloc(sizeof(task_resource));
 	if (ptr == NULL) {
@@ -107,7 +107,7 @@ static task_resource *new_task_resource()
 }
 
 
-static task_queue *add_task_queue(uint8_t priority)
+static inline task_queue *add_task_queue(uint8_t priority)
 {
 	task_queue *res = find_task_queue(priority);
 

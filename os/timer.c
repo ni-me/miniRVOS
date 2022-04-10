@@ -49,7 +49,7 @@ void timer_init()
 }
 
 
-static void insert(struct timer *timer)
+static inline void insert(struct timer *timer)
 {
 	struct timer *pre = timer_head;
 	struct timer *curr = timer_head->next;
