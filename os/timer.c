@@ -101,6 +101,7 @@ void timer_delete(struct timer *timer)
 			pre->next = curr->next;
 			curr->next = NULL;
 			free(curr);
+			break;
 		}
 		pre = pre->next;
 		curr = curr->next;
