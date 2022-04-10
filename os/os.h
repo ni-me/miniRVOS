@@ -32,6 +32,7 @@ extern void free(void *ptr);
 
 #define TASK_YEILD_CODE 0
 #define TASK_EXIT_CODE 1
+#define TASK_DELAY_CODE 2
 
 typedef struct context {
 	/* ignore x0 */
@@ -115,4 +116,13 @@ extern void initlock(struct spinlock *);
 extern void spin_lock(struct spinlock *);
 extern void spin_unlock(struct spinlock *);
 
+/* software timer */
+struct timer {
+	void (*func)(void *arg);
+	void *arg;
+	uint32_t timeout_tick;
+	struct timer *next;
+};
+extern struct timer *timer_create(void (*handler)(void *arg), void *arg, uint32_t timeout);
+extern void timer_delete(struct timer *timer);
 #endif /* __OS_H__ */

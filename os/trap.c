@@ -6,6 +6,8 @@ extern void timer_handler(void);
 extern void destory(void);
 extern void switch_to_os(void);
 
+extern task_queue task_queue_head;
+
 void trap_init()
 {
 	/*
@@ -53,17 +55,23 @@ void software_interrupt_handler(reg_t code) {
 	*(uint32_t*)CLINT_MSIP(id) = 0;
 
 	switch(code) {
-		case TASK_YEILD_CODE:
+		case TASK_YEILD_CODE: {
+			task_resource *t = task_queue_head.next->head->link;
+			t->tick = 0;
 			task_os();
 			break;
+		}
 		case TASK_EXIT_CODE:
 			destory();
 			switch_to_os();
+			break;
+		case TASK_DELAY_CODE:
 			break;
 		default:
 			break;
 	}
 }
+
 
 reg_t trap_handler(reg_t code, reg_t epc, reg_t cause)
 {

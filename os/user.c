@@ -3,7 +3,28 @@
 #define DELAY 1000
 //#define USE_LOCK
 
-struct spinlock *lock = NULL;
+struct userdata {
+	int counter;
+	char *str;
+};
+
+/* Jack must be global */
+struct userdata person = {0, "Jack"};
+
+void timer_func(void *arg)
+{
+	if (NULL == arg)
+		return;
+
+	struct userdata *param = (struct userdata *)arg;
+
+	param->counter++;
+	printf("======> TIMEOUT: %s: %d\n", param->str, param->counter);
+}
+
+
+
+static struct spinlock *user_lock = NULL;
 
 void user_task0(int id)
 {
@@ -12,17 +33,30 @@ void user_task0(int id)
 	printf("Task %d: Back to OS\n", id);
 	task_yeild();
 
+	struct timer *t1 = timer_create(timer_func, &person, 3);
+	if (t1 == NULL) {
+		printf("timer_create() failed!\n");
+	}
+	struct timer *t2 = timer_create(timer_func, &person, 5);
+	if (t2 == NULL) {
+		printf("timer_create() failed!\n");
+	}
+	struct timer *t3 = timer_create(timer_func, &person, 7);
+	if (t3 == NULL) {
+		printf("timer_create() failed!\n");
+	}
+
 	while (cnt --) {
 #ifdef USE_LOCK
 		task_delay(DELAY);
-		spin_lock(lock);
+		spin_lock(user_lock);
 #endif
 		for (int i = 0; i < 5; i ++) {
 			printf("Task %d: Running...( %d ) ---- [ %d ]\n", id, i, cnt);
 			task_delay(DELAY);
 		}
 #ifdef USE_LOCK
-		spin_unlock(lock);
+		spin_unlock(user_lock);
 		task_delay(DELAY);
 #endif
 	}
@@ -40,7 +74,7 @@ void user_task1(int cnt)
 	while (cnt --) {
 #ifdef USE_LOCK
 		task_delay(DELAY);
-		spin_lock(lock);
+		spin_lock(user_lock);
 #endif
 		for (int i = 0; i < 10; i ++) {
 			printf("Task 1: Running...( %d ) ---- [ %d ]\n", i, cnt);
@@ -48,7 +82,7 @@ void user_task1(int cnt)
 		}
 
 #ifdef USE_LOCK
-		spin_unlock(lock);
+		spin_unlock(user_lock);
 		task_delay(DELAY);
 #endif
 	}
@@ -66,7 +100,7 @@ void user_task2()
 	while (cnt --) {
 #ifdef USE_LOCK
 		task_delay(DELAY);
-		spin_lock(lock);
+		spin_lock(user_lock);
 #endif
 		for (int i = 0; i < 10; i ++) {
 			printf("Task 2: Running...( %d ) ---- [ %d ]\n", i, cnt);
@@ -74,7 +108,7 @@ void user_task2()
 		}
 
 #ifdef USE_LOCK
-		spin_unlock(lock);
+		spin_unlock(user_lock);
 		task_delay(DELAY);
 #endif
 	}
@@ -102,11 +136,11 @@ void os_main(void)
 	int id0 = 0;
 	int cnt = 3;
 #ifdef USE_LOCK
-	lock = (struct spinlock *) malloc(sizeof(struct spinlock));
-	if (lock == NULL) {
+	user_lock = (struct spinlock *) malloc(sizeof(struct spinlock));
+	if (user_lock == NULL) {
 		return;
 	}
-	initlock(lock);
+	initlock(user_lock);
 #endif
 	task_create(user_task1, cnt, 0, 3);
 	task_create(user_task0, id0, 3, 1);
