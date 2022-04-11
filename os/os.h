@@ -16,7 +16,6 @@ extern void uart_puts(char *s);
 extern char uart_getc();
 extern int uart_gets(char *s);
 
-
 /* printf */
 extern int  printf(const char* s, ...);
 extern void panic(char *s);
@@ -33,6 +32,8 @@ extern void free(void *ptr);
 #define TASK_YEILD_CODE 0
 #define TASK_EXIT_CODE 1
 #define TASK_DELAY_CODE 2
+
+#define DELAY 1000
 
 typedef struct context {
 	/* ignore x0 */
@@ -77,6 +78,7 @@ typedef struct context {
 typedef struct task_resource {
 	uint32_t tick;
 	uint32_t timeslice;
+	uint8_t priority;
 	struct task_resource *link;
 	struct context *task_context;
 	uint8_t *task_stack;
@@ -92,15 +94,24 @@ typedef struct task_queue {
 } task_queue;
 
 
+struct delay_list {
+	uint32_t timeout;
+	task_resource *task;
+	struct delay_list *next;	
+};
+
+
 extern void sys_switch(struct context *ctx_old, struct context *ctx_new);
 extern void switch_to(struct context *ctx);
 
-extern int  task_create(void (*task)(void *param), void *param, uint8_t priority, uint32_t timeslice);
-extern void task_delay(volatile int count);
+extern void task_create(void (*task)(void *param), void *param, uint8_t priority, uint32_t timeslice);
+extern void task_delay(uint32_t tick);
 extern void task_exit();
 extern void task_yeild();
 extern void task_go();
 extern void task_os();
+
+extern void wait(volatile int count);
 
 /* plic */
 extern int plic_claim(void);

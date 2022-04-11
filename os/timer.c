@@ -1,19 +1,32 @@
 #include "os.h"
 
-extern task_queue task_queue_head;
-extern void schedule(void);
-extern void switch_to_os(void);
+extern task_queue *task_queue_head;
+extern void schedule();
+extern void switch_to_os();
 
 
 /* interval ~= 1s */
 #define TIMER_INTERVAL CLINT_TIMEBASE_FREQ
 
-static uint32_t _tick = 0;
+uint32_t _tick = 0;
 
 static struct spinlock *timer_lock = NULL;
 
 static struct timer *timer_head = NULL;
 
+/*
+void display_timer()
+{
+	struct timer *t = timer_head->next;
+	printf("timer:\nHEAD ->");
+	while (t) {
+		printf("%d ->", t->timeout_tick);
+		t = t->next;
+	}
+
+	printf("\n\n");
+}
+*/
 
 /* load timer interval(in ticks) for next timer interrupt.*/
 void timer_load(int interval)
@@ -131,7 +144,7 @@ void timer_handler()
 	timer_check();
 	timer_load(TIMER_INTERVAL);
 
-	task_resource *t = task_queue_head.next->head->link;
+	task_resource *t = task_queue_head->next->head->link;
 	t->tick++;
 
 	if (t->tick < t->timeslice) {

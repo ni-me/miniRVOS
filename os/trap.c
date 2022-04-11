@@ -1,12 +1,14 @@
 #include "os.h"
 
-extern void trap_vector(void);
-extern void uart_isr(void);
-extern void timer_handler(void);
-extern void destory(void);
-extern void switch_to_os(void);
+extern void trap_vector();
+extern void uart_isr();
+extern void timer_handler();
+extern void destory();
+extern void switch_to_os();
+extern void activate();
+extern void delay(uint32_t tick);
 
-extern task_queue task_queue_head;
+extern task_queue *task_queue_head;
 
 void trap_init()
 {
@@ -16,9 +18,9 @@ void trap_init()
 	w_mtvec((reg_t)trap_vector);
 }
 
-void software_trigger(reg_t code)
+void software_trigger(reg_t code, uint32_t tick)
 {
-	/* When jump into trap_vector(), $a0 is equal to code */
+	/* When jump into trap_vector(), $a0 is equal to code, $a1 is equal to tick*/
 
 	int id = r_mhartid();
 	*(uint32_t*)CLINT_MSIP(id) = 1;
@@ -46,7 +48,7 @@ void external_interrupt_handler()
 }
 
 
-void software_interrupt_handler(reg_t code) {
+void software_interrupt_handler(reg_t code, uint32_t tick) {
 	/*
 	 * acknowledge the software interrupt by clearing
      * the MSIP bit in mip.
@@ -56,7 +58,7 @@ void software_interrupt_handler(reg_t code) {
 
 	switch(code) {
 		case TASK_YEILD_CODE: {
-			task_resource *t = task_queue_head.next->head->link;
+			task_resource *t = task_queue_head->next->head->link;
 			t->tick = 0;
 			task_os();
 			break;
@@ -66,6 +68,8 @@ void software_interrupt_handler(reg_t code) {
 			switch_to_os();
 			break;
 		case TASK_DELAY_CODE:
+			timer_create(activate, NULL, tick);
+			delay(tick);
 			break;
 		default:
 			break;
@@ -73,7 +77,7 @@ void software_interrupt_handler(reg_t code) {
 }
 
 
-reg_t trap_handler(reg_t code, reg_t epc, reg_t cause)
+reg_t trap_handler(reg_t code, uint32_t tick, reg_t epc, reg_t cause)
 {
 	reg_t return_pc = epc;
 	reg_t cause_code = cause & 0xfff;
@@ -83,7 +87,7 @@ reg_t trap_handler(reg_t code, reg_t epc, reg_t cause)
 		switch (cause_code) {
 		case 3:
 			uart_puts("software interruption!\n");
-			software_interrupt_handler(code);
+			software_interrupt_handler(code, tick);
 			break;
 		case 7:
 			uart_puts("timer interruption!\n");

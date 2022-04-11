@@ -4,12 +4,15 @@ target remote : 1234
 c
 
 b start_kernel
-b trap_vector
-b user_task1
-b user_task2
+# b trap_vector
+# b user_task4
+# b user_task5
+# b task_delay
+# b idle_task
 
 display/z $mscratch
 display/z $mepc
+display/z $ra
 display/z $sp
 display/z $a0
 display/z $a1
