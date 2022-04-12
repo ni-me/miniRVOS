@@ -5,54 +5,19 @@
 task_queue *task_queue_head;
 struct delay_list *delay_list_head;
 
-context ctx_os;
-context *ctx_current;
+static task_queue tqhead;
+static struct delay_list dhead;
+
+static context ctx_os;
+static context *ctx_current;
 
 extern uint32_t _tick;
 
 /* optimize? */
 extern void software_trigger(reg_t code, uint32_t tick);
 
-/*
-void display_delay()
-{
-	struct delay_list *t = delay_list_head->next;
-	printf("delay:\n");
-	printf("HEAD ->");
-	while (t) {
-		printf("%s:%d ->", t->task->info, t->timeout);
-		t = t->next;
-	}
-	printf("\n\n");
 
-}
-*/
-
-/*
-void display_activate()
-{
-	task_queue *q = task_queue_head->next;
-	printf("activate:\n");
-	while (q) {
-		task_resource *t = q->head->link;
-		printf("(%d) HEAD ->", q->priority);
-		while (t) {
-			printf("%s ->", t->info);
-			t = t->link;
-		}
-		printf("\n");
-		q = q->next;
-	}
-	printf("\n");
-}
-
-*/
-
-
-/*
- * a very rough implementaion, just to consume the cpu
- */
-
+/* a very rough implementaion, just to consume the cpu */
 void wait(volatile int count)
 {
 	count *= 50000;
@@ -60,38 +25,25 @@ void wait(volatile int count)
 }
 
 
-
 static void idle_task() {
 	while (1) {
 		// waiting for ~= 1 s
-		wait(1000);
+		wait(DELAY);
 	}
 }
 
 
 static void tasks_init()
 {
-	task_queue_head = (task_queue *) malloc(sizeof(task_queue));
-	if (task_queue_head == NULL) {
-		return;
-	}
-
-	delay_list_head = (struct delay_list *) malloc(sizeof(struct delay_list));
-	if (delay_list_head == NULL) {
-		return;
-	}
+	task_queue_head = &tqhead;
+	delay_list_head = &dhead;
 
 	task_queue_head->next = NULL;
 	delay_list_head->next = NULL;
 
-	/* optimize? */
 	task_create(idle_task, NULL, 255, 1);
 }
 
-
-/*
- * implment a simple cycle FIFO schedular based on priority
- */
 
 static inline task_resource *dequeue(task_queue *queue)
 {
@@ -203,21 +155,8 @@ static inline task_queue *add_task_queue(uint8_t priority)
 	return res;
 }
 
-void sched_init()
-{
-	w_mscratch(0);
-	tasks_init();
-	/* enable machine-mode software interrupts. */
-	w_mie(r_mie() | MIE_MSIE);
-}
 
-
-void switch_to_os() {
-	ctx_current = &ctx_os;
-	switch_to(&ctx_os);
-}
-
-static void task_insert(uint8_t priority, task_resource *task) {
+static inline void task_insert(uint8_t priority, task_resource *task) {
 		task_queue *task_queue_ptr = find_task_queue(priority);
 		task_resource *task_resource_ptr = NULL;
 
@@ -243,6 +182,11 @@ static void task_insert(uint8_t priority, task_resource *task) {
 		enqueue(task_queue_ptr, task);
 }
 
+
+void switch_to_os() {
+	ctx_current = &ctx_os;
+	switch_to(&ctx_os);
+}
 
 void task_create(void(*task)(void *), void *param, uint8_t priority, uint32_t timeslice)
 {
@@ -350,6 +294,15 @@ void delay(uint32_t tick) {
 
 	delay_list_insert(t);
 	switch_to_os();
+}
+
+
+void sched_init()
+{
+	w_mscratch(0);
+	tasks_init();
+	/* enable machine-mode software interrupts. */
+	w_mie(r_mie() | MIE_MSIE);
 }
 
 

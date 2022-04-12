@@ -1,8 +1,10 @@
 #include "os.h"
 
-//#define USE_LOCK
+/*
+#define USE_LOCK
 
 static struct spinlock *user_lock = NULL;
+*/
 
 struct userdata {
 	int counter;

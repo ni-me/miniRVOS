@@ -13,9 +13,6 @@ extern void trap_init();
 extern void plic_init();
 extern void timer_init();
 
-// extern void display_timer(void);
-// extern void display_delay(void);
-// extern void display_activate(void);
 
 char buffer[BUFFER_LENGTH];
 
@@ -37,9 +34,6 @@ void start_kernel(void)
 	os_main();
 
 	while (1) {
-		 // display_activate();
-		 // display_delay();
-		 // display_timer();	
 		 uart_puts("OS: Activate next task\n");
 		 task_go();
 		 uart_puts("OS: Back to OS\n\n");
