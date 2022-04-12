@@ -143,6 +143,7 @@ void user_task4()
 	uart_puts("Task 4: Delay...\n");    
 	task_delay(2);
 	uart_puts("Task 4: I'm back!\n");
+
 	while (1) {
 		uart_puts("Task 4: I'm runing...\n");
 		wait(DELAY);
@@ -158,9 +159,10 @@ void user_task5()
 	task_yeild();
 
 	wait(DELAY);
-	uart_puts("Task 5: Delay...\n");    
+	uart_puts("Task 5: Delay...\n");
 	task_delay(3);
 	uart_puts("Task 5: I'm back!\n");
+
 	while (1) {
 		uart_puts("Task 5: I'm runing...\n");
 		wait(DELAY);
@@ -185,8 +187,8 @@ void os_main(void)
 	task_create(user_task2, NULL, 0, 2);
 	task_create(user_task3, NULL, 20, 2);
 
-	task_create(user_task4, NULL, 0, 1);
-	task_create(user_task5, NULL, 0, 2);
+	task_create(user_task4, NULL, 0, 2);
+	task_create(user_task5, NULL, 0, 1);
 }
 
  

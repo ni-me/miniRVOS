@@ -1,6 +1,12 @@
 CROSS_COMPILE = riscv64-unknown-elf-
 CFLAGS = -nostdlib -fno-builtin -march=rv32ima -mabi=ilp32 -g -Wall -O1
 
+SYSCALL = y
+
+ifeq (${SYSCALL}, y)
+CFLAGS += -D CONFIG_SYSCALL
+endif
+
 QEMU = qemu-system-riscv32
 QFLAGS = -nographic -smp 1 -machine virt -bios none
 
@@ -14,6 +20,7 @@ SRCS_ASM = \
 	mem.S \
 	memset.S \
 	entry.S \
+	usys.S \
 
 SRCS_C = \
 	kernel.c \
@@ -26,6 +33,7 @@ SRCS_C = \
 	plic.c \
 	timer.c \
 	lock.c \
+	syscall.c \
 
 OBJS = $(SRCS_ASM:.S=.o)
 OBJS += $(SRCS_C:.c=.o)

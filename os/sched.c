@@ -13,9 +13,7 @@ static context *ctx_current;
 
 extern uint32_t _tick;
 
-/* optimize? */
 extern void software_trigger(reg_t code, uint32_t tick);
-
 
 /* a very rough implementaion, just to consume the cpu */
 void wait(volatile int count)
@@ -201,6 +199,7 @@ void task_create(void(*task)(void *), void *param, uint8_t priority, uint32_t ti
 	if (!new_task || !new_task->task_context || !new_task->task_stack) {
 		return;
 	}
+
 	new_task->tick = 0;
 	new_task->timeslice = timeslice;
 	new_task->priority = priority;

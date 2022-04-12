@@ -82,6 +82,8 @@ typedef struct task_resource {
 	struct task_resource *link;
 	struct context *task_context;
 	uint8_t *task_stack;
+
+	//char *info;
 } task_resource;
 
 

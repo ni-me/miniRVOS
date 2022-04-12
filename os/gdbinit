@@ -12,6 +12,7 @@ b start_kernel
 
 display/z $mscratch
 display/z $mepc
+display/z $mstatus
 display/z $ra
 display/z $sp
 display/z $a0

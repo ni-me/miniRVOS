@@ -7,6 +7,8 @@ extern void destory();
 extern void switch_to_os();
 extern void activate();
 extern void delay(uint32_t tick);
+extern void do_syscall(struct context *cxt);
+extern int gethid(unsigned int *hid);
 
 extern task_queue *task_queue_head;
 
@@ -22,8 +24,25 @@ void software_trigger(reg_t code, uint32_t tick)
 {
 	/* When jump into trap_vector(), $a0 is equal to code, $a1 is equal to tick*/
 
-	int id = r_mhartid();
-	*(uint32_t*)CLINT_MSIP(id) = 1;
+	// int id = r_mhartid();
+	// *(uint32_t*)CLINT_MSIP(id) = 1;
+	unsigned int hid;
+	int ret = -1;
+	ret = gethid(&hid);
+
+	if (ret == 0) {
+		/* restore $a0 and $a1 */
+		asm volatile (
+			"mv a0, %[input0]\n"
+			"mv a1, %[input1]\n"
+			:
+			:[input0]"r"(code), [input1]"r"(tick)
+	);
+		*(uint32_t*)CLINT_MSIP(hid) = 1;
+	} else {
+		panic("OPPS! software_trigger: error\n");
+	}
+
 }
 
 
@@ -77,7 +96,7 @@ void software_interrupt_handler(reg_t code, uint32_t tick) {
 }
 
 
-reg_t trap_handler(reg_t code, uint32_t tick, reg_t epc, reg_t cause)
+reg_t trap_handler(reg_t code, uint32_t tick, reg_t epc, reg_t cause, context *cxt)
 {
 	reg_t return_pc = epc;
 	reg_t cause_code = cause & 0xfff;
@@ -104,10 +123,17 @@ reg_t trap_handler(reg_t code, uint32_t tick, reg_t epc, reg_t cause)
 	} else {
 		/* Synchronous trap - exception */
 		printf("Sync exceptions!, code = %d\n", cause_code);
-		panic("OOPS! What can I do!");
-		//return_pc += 4;
+		switch (cause_code) {
+		case 8:
+			uart_puts("System call from U-mode!\n");
+			do_syscall(cxt);
+			return_pc += 4;
+			break;
+		default:
+			panic("OOPS! What can I do!");
+			//return_pc += 4;
+		}
 	}
-
 	return return_pc;
 }
 

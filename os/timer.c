@@ -14,6 +14,7 @@ static struct spinlock *timer_lock = NULL;
 
 static struct timer *timer_head = NULL;
 
+
 /* load timer interval(in ticks) for next timer interrupt.*/
 void timer_load(int interval)
 {

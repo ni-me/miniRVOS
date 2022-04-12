@@ -109,6 +109,7 @@ trap_vector:
 	# call the C trap handler in trap.c
 	csrr	a2, mepc
 	csrr	a3, mcause
+	csrr    a4, mscratch
 	
 	call	trap_handler
 

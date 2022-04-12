@@ -13,7 +13,6 @@ extern void trap_init();
 extern void plic_init();
 extern void timer_init();
 
-
 char buffer[BUFFER_LENGTH];
 
 void start_kernel(void)
@@ -24,9 +23,7 @@ void start_kernel(void)
 	page_init();
 
 	trap_init();
-
 	plic_init();
-
 	timer_init();
 
 	sched_init();
@@ -34,9 +31,9 @@ void start_kernel(void)
 	os_main();
 
 	while (1) {
-		 uart_puts("OS: Activate next task\n");
-		 task_go();
-		 uart_puts("OS: Back to OS\n\n");
+		uart_puts("OS: Activate next task\n");
+		task_go();
+		uart_puts("OS: Back to OS\n\n");
 	} // stop here!
 }
 
