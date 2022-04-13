@@ -6,6 +6,7 @@ void initlock(struct spinlock *lk) {
 
 void spin_lock(struct spinlock *lk)
 {
+	/* test and set */
 	while (__sync_lock_test_and_set(&lk->locked, 1) != 0);
 }
 

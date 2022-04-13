@@ -24,25 +24,22 @@ void software_trigger(reg_t code, uint32_t tick)
 {
 	/* When jump into trap_vector(), $a0 is equal to code, $a1 is equal to tick*/
 
-	// int id = r_mhartid();
-	// *(uint32_t*)CLINT_MSIP(id) = 1;
 	unsigned int hid;
 	int ret = -1;
 	ret = gethid(&hid);
 
-	if (ret == 0) {
+	if (!ret) {
 		/* restore $a0 and $a1 */
 		asm volatile (
 			"mv a0, %[input0]\n"
 			"mv a1, %[input1]\n"
 			:
 			:[input0]"r"(code), [input1]"r"(tick)
-	);
+		);
 		*(uint32_t*)CLINT_MSIP(hid) = 1;
 	} else {
 		panic("OPPS! software_trigger: error\n");
 	}
-
 }
 
 
@@ -57,7 +54,7 @@ void external_interrupt_handler()
 			uart_isr();
 			break;
 		default:
-			printf("unexpected interrupt irq = %d\n", irq);
+			printf("\nunexpected interrupt irq = %d\n", irq);
 			break;
 	}
 
@@ -105,32 +102,32 @@ reg_t trap_handler(reg_t code, uint32_t tick, reg_t epc, reg_t cause, context *c
 		/* Asynchronous trap - interrupt */
 		switch (cause_code) {
 		case 3:
-			uart_puts("software interruption!\n");
+			uart_puts("\nsoftware interruption!\n");
 			software_interrupt_handler(code, tick);
 			break;
 		case 7:
-			uart_puts("timer interruption!\n");
+			uart_puts("\ntimer interruption!\n");
 			timer_handler();
 			break;
 		case 11:
-			uart_puts("external interruption!\n");
+			uart_puts("\nexternal interruption!\n");
 			external_interrupt_handler();
 			break;
 		default:
-			uart_puts("unknown async exception!\n");
+			uart_puts("\nunknown async exception!\n");
 			break;
 		}
 	} else {
 		/* Synchronous trap - exception */
-		printf("Sync exceptions!, code = %d\n", cause_code);
+		printf("\nSync exceptions!, code = %d\n", cause_code);
 		switch (cause_code) {
 		case 8:
-			uart_puts("System call from U-mode!\n");
+			uart_puts("\nSystem call from U-mode!\n");
 			do_syscall(cxt);
 			return_pc += 4;
 			break;
 		default:
-			panic("OOPS! What can I do!");
+			panic("OOPS! What can I do!\n");
 			//return_pc += 4;
 		}
 	}

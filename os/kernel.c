@@ -7,7 +7,6 @@
 extern void uart_init();
 extern void page_init();
 extern void sched_init();
-extern void schedule();
 extern void os_main();
 extern void trap_init();
 extern void plic_init();

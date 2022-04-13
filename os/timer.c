@@ -1,19 +1,16 @@
 #include "os.h"
 
+/* interval ~= 1s */
+#define TIMER_INTERVAL CLINT_TIMEBASE_FREQ
+
 extern task_queue *task_queue_head;
 extern void schedule();
 extern void switch_to_os();
 
-
-/* interval ~= 1s */
-#define TIMER_INTERVAL CLINT_TIMEBASE_FREQ
-
 uint32_t _tick = 0;
 
 static struct spinlock *timer_lock = NULL;
-
 static struct timer *timer_head = NULL;
-
 
 /* load timer interval(in ticks) for next timer interrupt.*/
 void timer_load(int interval)
@@ -123,14 +120,7 @@ static inline void timer_check()
 	}
 }
 
-void timer_handler() 
-{
-	_tick++;
-	printf("tick: %d\n", _tick);
-	
-	timer_check();
-	timer_load(TIMER_INTERVAL);
-
+static inline void schedule_check() {
 	task_resource *t = task_queue_head->next->head->link;
 	t->tick++;
 
@@ -140,4 +130,15 @@ void timer_handler()
 		t->tick = 0;
 		task_os();
 	}
+
+}
+
+void timer_handler() 
+{
+	_tick++;
+	printf("tick: %d\n", _tick);
+	
+	timer_check();
+	timer_load(TIMER_INTERVAL);
+	schedule_check();
 }

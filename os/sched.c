@@ -7,12 +7,10 @@ struct delay_list *delay_list_head;
 
 static task_queue tqhead;
 static struct delay_list dhead;
-
 static context ctx_os;
 static context *ctx_current;
 
 extern uint32_t _tick;
-
 extern void software_trigger(reg_t code, uint32_t tick);
 
 /* a very rough implementaion, just to consume the cpu */
@@ -23,7 +21,7 @@ void wait(volatile int count)
 }
 
 
-static void idle_task() {
+static inline void idle_task() {
 	while (1) {
 		// waiting for ~= 1 s
 		wait(DELAY);
@@ -31,7 +29,7 @@ static void idle_task() {
 }
 
 
-static void tasks_init()
+static inline void tasks_init()
 {
 	task_queue_head = &tqhead;
 	delay_list_head = &dhead;
@@ -181,11 +179,6 @@ static inline void task_insert(uint8_t priority, task_resource *task) {
 }
 
 
-void switch_to_os() {
-	ctx_current = &ctx_os;
-	switch_to(&ctx_os);
-}
-
 void task_create(void(*task)(void *), void *param, uint8_t priority, uint32_t timeslice)
 {
 	if (task == NULL) {
@@ -265,6 +258,11 @@ static void delay_list_insert(struct delay_list *node) {
 	pre->next = node;
 }
 
+
+void switch_to_os() {
+	ctx_current = &ctx_os;
+	switch_to(&ctx_os);
+}
 
 void delay(uint32_t tick) {
 	task_queue *queue = task_queue_head->next;
